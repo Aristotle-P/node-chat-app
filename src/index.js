@@ -24,6 +24,13 @@ io.on('connection', socket => {
     io.emit('message', text);
   });
 
+  socket.on('sendLocation', location => {
+    io.emit(
+      'message',
+      `Location: https://google.com/maps?q=${location.lat},${location.long}`
+    );
+  });
+
   socket.on('disconnect', () => {
     io.emit('message', 'A user has disconnected from chat.');
   });
