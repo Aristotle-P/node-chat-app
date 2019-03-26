@@ -21,7 +21,7 @@ io.on('connection', socket => {
   socket.broadcast.emit('message', 'A new user has joined!');
 
   socket.on('sendMessage', text => {
-    socket.emit('message', text);
+    io.emit('message', text);
   });
 
   socket.on('disconnect', () => {
