@@ -2,6 +2,12 @@ const express = require('express');
 const http = require('http');
 const path = require('path');
 const socketio = require('socket.io');
+const Filter = require('bad-words');
+
+const {
+  generateMessage,
+  generateLocationMessage
+} = require('./utils/messages');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,22 +23,31 @@ let count = 0;
 io.on('connection', socket => {
   console.log('New websocket connection');
 
-  socket.emit('message', 'Welcome!');
-  socket.broadcast.emit('message', 'A new user has joined!');
+  socket.emit('message', generateMessage('Welcome!'));
+  socket.broadcast.emit('message', generateMessage('A new user has joined!'));
 
-  socket.on('sendMessage', text => {
-    io.emit('message', text);
+  socket.on('sendMessage', (text, callback) => {
+    const filter = new Filter();
+
+    if (filter.isProfane(text)) {
+      return callback('Watch your profanity.');
+    }
+    io.emit('message', generateMessage(text));
+    callback();
   });
 
-  socket.on('sendLocation', location => {
+  socket.on('sendLocation', (location, callback) => {
     io.emit(
-      'message',
-      `Location: https://google.com/maps?q=${location.lat},${location.long}`
+      'locationMessage',
+      generateLocationMessage(
+        `https://google.com/maps?q=${location.lat},${location.long}`
+      )
     );
+    callback();
   });
 
   socket.on('disconnect', () => {
-    io.emit('message', 'A user has disconnected from chat.');
+    io.emit('message', generateMessage('A user has disconnected from chat.'));
   });
 });
 
