@@ -33,20 +33,19 @@ const removeUser = id => {
   }
 };
 
-// const getUser = () => {};
+const getUser = id => {
+  const user = users.filter(user => user.id === id);
+  return user[0];
+};
 
-// const getUsersInRoom = () => {};
+const getUsersInRoom = roomName => {
+  const room = roomName.trim().toLowerCase();
+  return (localUsers = users.filter(user => user.room === room));
+};
 
-addUser({
-  id: 11,
-  username: 'Sully',
-  room: 'Northside'
-});
-
-const res = addUser({
-  id: 22,
-  username: 'Sully',
-  room: 'Southside'
-});
-removeUser(res.id);
-console.log(users);
+module.exports = {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom
+};

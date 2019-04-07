@@ -10,28 +10,63 @@ const messages = document.querySelector('#messages');
 // Declaring message templates
 const messageTemplate = document.querySelector('#message-template').innerHTML;
 const locationTemplate = document.querySelector('#location-template').innerHTML;
+const sidebarTemplate = document.querySelector('#sidebar-template').innerHTML;
 
 //Options
 const { username, room } = Qs.parse(location.search, {
   ignoreQueryPrefix: true
 });
 
+const autoscroll = () => {
+  const newMessage = messages.lastElementChild;
+
+  // Height of newest message
+  const newMessageStyles = getComputedStyle(newMessage);
+  const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+  const newMessageHeight = newMessage.offsetHeight + newMessageMargin;
+
+  // Height of visible screen real estate
+  const visibleHeight = messages.offsetHeight;
+
+  // Height of full messages container
+  const containerHeight = messages.scrollHeight;
+
+  // Screen scrolling location
+  const scrollOffset = messages.scrollTop + visibleHeight;
+
+  if (containerHeight - newMessageHeight <= scrollOffset) {
+    messages.scrollTop = messages.scrollHeight;
+  }
+};
+
 socket.on('message', message => {
   console.log(message);
   const html = Mustache.render(messageTemplate, {
+    username: message.username,
     message: message.text,
     createdAt: moment(message.createdAt).format('h:mm A')
   });
   messages.insertAdjacentHTML('beforeend', html);
+  autoscroll();
 });
 
 socket.on('locationMessage', message => {
   console.log(message);
   const html = Mustache.render(locationTemplate, {
+    username: message.username,
     location: message.url,
     createdAt: moment(message.createdAt).format('h:mm A')
   });
   messages.insertAdjacentHTML('beforeend', html);
+  autoscroll();
+});
+
+socket.on('roomData', ({ room, users }) => {
+  const html = Mustache.render(sidebarTemplate, {
+    room,
+    users
+  });
+  document.querySelector('#sidebar').innerHTML = html;
 });
 
 chatForm.addEventListener('submit', e => {
@@ -69,4 +104,9 @@ locationBtn.addEventListener('click', e => {
   });
 });
 
-socket.emit('join', { username, room });
+socket.emit('join', { username, room }, error => {
+  if (error) {
+    alert(error);
+    location.href = '/';
+  }
+});
